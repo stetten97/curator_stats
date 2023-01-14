@@ -1,0 +1,20 @@
+--- 
+# config file for curator stats
+# paths to important directories
+base_dir: "/Users/moritzvonstetten/Documents/EMBL/work/studies/"
+
+# directory suffixes for concatenation
+concat_dirs:
+  filled_templates: "templates/filled/"
+  fetch_data: "fetch_data/"
+
+
+# length of header to be ignored
+header_len: 7
+
+# example config option
+sample_types:
+- "Animal"
+- "Human"
+- "Environmental"
+...

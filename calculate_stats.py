@@ -3,21 +3,14 @@ import os
 import yaml
 from yaml.loader import SafeLoader
 import argparse
+import csv
 
-class Study():
+class Study:
     """Study object that holds basic information of interest for a specific study"""
-    def __init__(self) -> None:
+    def __init__(self, study_code, year, study_type, count) -> None:
         self.study_code = study_code
-        pass
-    pass
-
-class StudyImporter():
-    """
-    A potential Importer Object.
-    
-    Could be used to properly check for and read in data of interest for studies.
-    """
-    pass
+        self.study_year = study_year
+        self.sample_count = sample_count
 
 def parse_args(description):
     parser = argparse.ArgumentParser(description=description)
@@ -37,11 +30,24 @@ def load_config(config_path):
         except yaml.YAMLError as e:
             print(e)
 
-def import_data(file_path):
+def define_paths(study: str, config_data: dict):
+    study_path = f"{config_data['base_dir']}{study}/"
+    template_path = f"{study_path}{config_data['concat_dirs']['filled_templates']}"
+    template_file = f"{template_path}{study}_filled_sample_template.tsv"
+
+    return template_file
+
+def parse_data(template, header_len: int):
     """data_import and information extraction from study subdirectories"""
-    with open(file_path, "r") as f:
-        num_lines = sum(_ for _ in f)
-    return num_lines
+    with open(template) as tsvfile:
+        tsv_reader = csv.reader(tsvfile, delimiter="\t")
+        for line in tsv_reader:
+            if line[0] == "## Study code:":
+                study_code = line[-1]
+                print(study_code)
+                study_year = study_code.split("_")[1]
+                break
+    return study_code, study_year
 
 def calculate_stats():
     """function that calcutates statistics of interests"""
@@ -50,15 +56,22 @@ def calculate_stats():
 def main(args):
     """main function that iterates though all study subdirectories and calculates statistics"""
     config_data = load_config("config.yaml")
-    print(config_data)
-    pass
+
     # check if study option is set and eventually only process specified study
     if args.study is not None:
         ### all of this should be included inside a different function or the StudyImporter Class
-        study_path = f"{config_data['base_dir']}{args.study}/"
-        template_path = f"{study_path}{config_data['concat_dirs']['filled_templates']}"
-        print(template_path)
-    pass
+        template_filename = define_paths(args.study, config_data)
+        study_code, study_year = parse_data(template_filename, config_data['header_len'])
+        print(study_code, study_year)
+    
+    else:
+        for study in os.listdir(config_data["base_dir"]):
+            template_filename = define_paths(study, config_data)
+            if os.path.isfile(template_filename):
+                study_code, study_year = parse_data(template_filename, config_data['header_len'])
+                print(study_code, study_year)
+            
+
 
 if __name__ == "__main__":
     description = "Python script to calculate base statistics on Metadata Curation Job"

@@ -17,4 +17,5 @@ sample_types:
 - "Animal"
 - "Human"
 - "Environmental"
+- "Ocean"
 ...

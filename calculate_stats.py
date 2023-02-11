@@ -1,17 +1,11 @@
 # python script to calculate statistics of metadata curation so far
 import os
+from os.path import dirname, realpath
+import sys
 import yaml
 from yaml.loader import SafeLoader
 import argparse
 import pandas as pd
-import csv
-
-class Study:
-    """Study object that holds basic information of interest for a specific study"""
-    def __init__(self, study_code, year, study_type, count) -> None:
-        self.study_code = study_code
-        self.study_year = study_year
-        self.sample_count = sample_count
 
 def parse_args(description):
     parser = argparse.ArgumentParser(description=description)
@@ -51,37 +45,18 @@ def get_filepaths(base_dir, search_str):
     else:
         return filepaths[0]
 
-def define_paths(study: str, config_data: dict):
-    study_path = f"{config_data['base_dir']}{study}/"
-    template_path = f"{study_path}{config_data['concat_dirs']['filled_templates']}"
-    template_file = f"{template_path}{study}_filled_sample_template.tsv"
-
-    return template_file
-
 def parse_data(template, header_len: int):
     """data_import and information extraction from study subdirectories"""
-    # with open(template) as tsvfile:
-    #     tsv_reader = csv.reader(tsvfile, delimiter="\t")
-    #     for line in tsv_reader:
-    #         if line[0] == "## Study code:":
-    #             study_code = line[-1]
-    #             print(study_code)
-    #             study_year = study_code.split("_")[1]
-    #             break
-    # return study_code, study_year
     template = pd.read_csv(template,
                            sep="\t",
                            skiprows=header_len)
     
     return len(template)
 
-def calculate_stats():
-    """function that calcutates statistics of interests"""
-    pass
-
 def main(args):
     """main function that iterates though all study subdirectories and calculates statistics"""
-    config_data = load_config("config.yaml")
+    yaml_path = realpath(__file__).rsplit("/", 1)[0] + "/config.yaml"
+    config_data = load_config(yaml_path)
 
     # check if study option is set and eventually only process specified study
     if args.study is not None:
@@ -91,17 +66,28 @@ def main(args):
         filepath = get_filepaths(study_dir, args.search_str)
 
         # get len of specific file
-        parse_data(filepath, config_data['header_len'])
-        # template_filename = define_paths(args.study, config_data)
-        # study_code, study_year = parse_data(template_filename, config_data['header_len'])
-        # print(study_code, study_year)
+        source = args.study
+        row_count = parse_data(filepath, config_data['header_len'])
     
     else:
         base_dir = f"{config_data['base_dir']}"
         filepaths = get_filepaths(base_dir, args.search_str)
+
+        source = config_data['base_dir']
+        row_count = int()
+        for path in filepaths:
+            row_count += parse_data(path, config_data['header_len'])
+    
+
+    stats = f"""
+    Total number of rows in {source}: {row_count}
+    """
+
+    return stats
         
 if __name__ == "__main__":
     description = "Python script to calculate base statistics on Metadata Curation Job"
     args = parse_args(description)
 
-    main(args)
+    stats = main(args)
+    print(stats)

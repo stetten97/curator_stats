@@ -1,7 +1,7 @@
 --- 
 # config file for curator stats
 # paths to important directories
-base_dir: "/Users/moritzvonstetten/Documents/EMBL/work/studies/"
+base_dir: "./"
 
 # directory suffixes for concatenation
 concat_dirs:
